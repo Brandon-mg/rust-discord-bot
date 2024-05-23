@@ -1,13 +1,14 @@
-use image::{DynamicImage, ImageBuffer, ImageResult};
+use std::io::Cursor;
+use bytes::Bytes;
+use image::ImageOutputFormat;
 
-fn get_image_from_url(url: String) -> Result<_, Error> {
-    let resp = reqwest::blocking::get(url).expect("request failed");
-    return image::load_from_memory(&resp.bytes())
-}
-
-pub(crate) fn make_fractal() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+pub(crate) fn make_fractal(seed: u32) -> bytes::Bytes {
     let imgx = 800;
     let imgy = 800;
+    let mult: f32 = match seed {
+        1..=100 => seed as f32/100.0,
+        _ => 0.3
+    };
 
     let scalex = 3.0 / imgx as f32;
     let scaley = 3.0 / imgy as f32;
@@ -17,8 +18,8 @@ pub(crate) fn make_fractal() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
 
     // Iterate over the coordinates and pixels of the image
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let r = (0.3 * x as f32) as u8;
-        let b = (0.3 * y as f32) as u8;
+        let r = (mult * x as f32) as u8;
+        let b = (mult * y as f32) as u8;
         *pixel = image::Rgb([r, 0, b]);
     }
 
@@ -45,5 +46,7 @@ pub(crate) fn make_fractal() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
 
     // Save the image as “fractal.png”, the format is deduced from the path
     imgbuf.save("fractal.png").unwrap();
-    return imgbuf
+    let mut w = Cursor::new(Vec::new());
+    imgbuf.write_to(&mut w, ImageOutputFormat::Png).unwrap();
+    return Bytes::from(w.into_inner())
 }

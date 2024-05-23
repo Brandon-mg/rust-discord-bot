@@ -34,14 +34,17 @@ pub async fn totalsize(
     Ok(())
 }
 
-#[poise::command(prefix_command)]
+#[poise::command(prefix_command, slash_command)]
 pub async fn fractal(
     ctx: Context<'_>,
-    #[description = "random seed"] seed: Option<i32>,
+    #[description = "random seed"] seed: Option<u32>,
 ) -> Result<(), Error> {
-    let mut imgBuf = image_effects::make_fractal();
-    let attachment = serenity::CreateAttachment::bytes(imgBuf, String::from("image.png"));
+    let mut default: u32 = 0;
+    if let Some(seed) = seed{
+        default+=seed
+    }
+    let img_buf = image_effects::make_fractal(default);
+    let attachment = serenity::CreateAttachment::bytes(img_buf, String::from("image.png"));
     ctx.send(CreateReply::default().content("image").attachment(attachment)).await?;
-
     Ok(())
 }

@@ -16,6 +16,7 @@ async fn main() {
             commands: vec![
                 commands::attachment_handler::file_details(),
                 commands::attachment_handler::totalsize(),
+                commands::attachment_handler::fractal(),
             ],
             on_error: |error| {
                 Box::pin(async move {

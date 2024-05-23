@@ -1,19 +1,19 @@
-use crate::{Context, Error};
-use poise::serenity_prelude as serenity;
+use crate::{commands::image_effects, Context, Error};
+use poise::{serenity_prelude as serenity, CreateReply};
 
 /// View the difference between two file sizes
 #[poise::command(prefix_command, slash_command)]
 pub async fn file_details(
     ctx: Context<'_>,
     #[description = "File to examine"] file: serenity::Attachment,
-    #[description = "Second file to examine"] file_2: Option<serenity::Attachment>,
 ) -> Result<(), Error> {
-    ctx.say(format!(
-        "First file name: **{:?}**. File size difference: **{}** bytes",
-        file.content_type,
-        file.size - file_2.map_or(0, |f| f.size)
-    ))
-    .await?;
+    let mut message = String::from("not an image");
+
+    if file.content_type.unwrap().contains("image") {
+        message = String::from("is image");
+        //ctx.send(builder)
+    }
+    ctx.say(message).await?;
     Ok(())
 }
 
@@ -30,6 +30,18 @@ pub async fn totalsize(
         total.checked_div(files.len() as _).unwrap_or(0)
     ))
     .await?;
+
+    Ok(())
+}
+
+#[poise::command(prefix_command)]
+pub async fn fractal(
+    ctx: Context<'_>,
+    #[description = "random seed"] seed: Option<i32>,
+) -> Result<(), Error> {
+    let mut imgBuf = image_effects::make_fractal();
+    let attachment = serenity::CreateAttachment::bytes(imgBuf, String::from("image.png"));
+    ctx.send(CreateReply::default().content("image").attachment(attachment)).await?;
 
     Ok(())
 }
